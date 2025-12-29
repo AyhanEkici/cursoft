@@ -1,0 +1,58 @@
+# Development
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+
+# Runtime
+*.log
+*.tmp
+*.cache
+/sessions/
+/temp/
+/tmp/
+
+# Environment
+.env
+.env.local
+.env.production
+config.local.php
+
+# Database dumps
+*.sql
+*.backup
+*.dump
+postgres-export.sql
+postgres-export-fixed.sql
+postgres-data-only.sql
+
+# XAMPP specific
+xampp/
+htdocs/cursoft/tmp/
+
+# Build artifacts
+public/
+!public/css/
+!public/js/
+!public/health.php
+
+# Workspaces (user-generated content)
+workspaces/*
+!workspaces/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker files (Render uses PHP runtime, not Docker)
+dockerfile
+Dockerfile
+

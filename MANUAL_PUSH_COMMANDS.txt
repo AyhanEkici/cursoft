@@ -1,0 +1,17 @@
+# Manual Push Commands - Copy and paste these in PowerShell
+
+# Step 1: Navigate to project
+cd E:\xampp\htdocs\cursoft
+
+# Step 2: Verify remote is set correctly
+git remote -v
+
+# Step 3: Push to GitHub
+git push origin main
+
+# If it times out, try with verbose output:
+git push origin main --verbose
+
+# Alternative: Push with increased timeout
+git -c http.postBuffer=524288000 -c http.timeout=300 push origin main
+

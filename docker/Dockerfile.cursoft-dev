@@ -1,0 +1,56 @@
+# Cursoft Development Base Image
+# This is a base Docker image for development environments
+
+FROM ubuntu:22.04
+
+# Avoid interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install basic tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    vim \
+    nano \
+    build-essential \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js (LTS)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Install Python 3 and pip
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP and common extensions
+RUN apt-get update && apt-get install -y \
+    php \
+    php-cli \
+    php-curl \
+    php-mbstring \
+    php-xml \
+    php-zip \
+    php-mysql \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Set working directory
+WORKDIR /workspace
+
+# Create a non-root user
+RUN useradd -m -s /bin/bash developer && \
+    chown -R developer:developer /workspace
+
+# Switch to non-root user
+USER developer
+
+# Default command
+CMD ["/bin/bash"]
+

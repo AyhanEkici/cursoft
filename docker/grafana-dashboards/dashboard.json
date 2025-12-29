@@ -1,0 +1,51 @@
+{
+  "dashboard": {
+    "title": "Cursoft Monitoring Dashboard",
+    "panels": [
+      {
+        "title": "Projects Overview",
+        "targets": [
+          {
+            "expr": "cursoft_projects_total",
+            "legendFormat": "Total Projects"
+          },
+          {
+            "expr": "cursoft_projects_active",
+            "legendFormat": "Active Projects"
+          },
+          {
+            "expr": "cursoft_projects_completed",
+            "legendFormat": "Completed Projects"
+          }
+        ]
+      },
+      {
+        "title": "Containers",
+        "targets": [
+          {
+            "expr": "cursoft_containers_total",
+            "legendFormat": "Total Containers"
+          },
+          {
+            "expr": "cursoft_containers_running",
+            "legendFormat": "Running Containers"
+          }
+        ]
+      },
+      {
+        "title": "LLM Usage",
+        "targets": [
+          {
+            "expr": "cursoft_llm_requests_total",
+            "legendFormat": "Total Requests"
+          },
+          {
+            "expr": "cursoft_llm_cost_total",
+            "legendFormat": "Total Cost (USD)"
+          }
+        ]
+      }
+    ]
+  }
+}
+

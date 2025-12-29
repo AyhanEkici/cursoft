@@ -1,0 +1,35 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+      - name: Deploy to server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /path/to/cursoft
+            git pull origin main
+            ./scripts/deploy.sh production
+          EOF
+      
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f https://${{ secrets.DOMAIN }}/api/health.php || exit 1
+

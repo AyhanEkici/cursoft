@@ -1,0 +1,18 @@
+# Prometheus Configuration for Cursoft Monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Cursoft Application Metrics
+  - job_name: 'cursoft-app'
+    static_configs:
+      - targets: ['app:80']
+    metrics_path: '/cursoft/api/metrics.php'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+

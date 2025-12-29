@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: cursoft-app
+    runtime: php
+    buildCommand: "./render-build.sh"
+    startCommand: "php -S 0.0.0.0:$PORT -t public"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cursoft-db
+          property: connectionString
+      - key: APP_ENV
+        value: production
+      - key: RENDER
+        value: true
+      - key: BASE_PATH
+        value: ""
+    healthCheckPath: /health.php
+    autoDeploy: true
+
+databases:
+  - name: cursoft-db
+    databaseName: cursoft_prod
+    user: cursoft_user
+    plan: free
+

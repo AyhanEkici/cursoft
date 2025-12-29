@@ -1,0 +1,45 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: cursoft_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: pdo_mysql, mbstring
+      
+      - name: Run database migrations
+        run: |
+          mysql -h 127.0.0.1 -u root -proot cursoft_test < database/schema.sql
+          mysql -h 127.0.0.1 -u root -proot cursoft_test < database/schema_phase2.sql
+          mysql -h 127.0.0.1 -u root -proot cursoft_test < database/schema_phase3.sql
+          mysql -h 127.0.0.1 -u root -proot cursoft_test < database/schema_phase4.sql
+      
+      - name: Run tests
+        run: |
+          # Add test commands here
+          echo "Tests would run here"
+          # php tests/run_all_tests.php
+

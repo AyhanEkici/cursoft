@@ -1,0 +1,26 @@
+# Docker Compose Template for Cursoft Projects
+# This template can be customized per project
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.cursoft-dev
+    container_name: cursoft-project-${PROJECT_ID}
+    ports:
+      - "${HOST_PORT}:80"
+    volumes:
+      - ./workspace:/workspace
+    environment:
+      - PROJECT_ID=${PROJECT_ID}
+      - CURSOFT_ENV=development
+    restart: unless-stopped
+    networks:
+      - cursoft-network
+
+networks:
+  cursoft-network:
+    driver: bridge
+
