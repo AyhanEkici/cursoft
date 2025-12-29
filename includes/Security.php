@@ -117,52 +117,64 @@ class Security {
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $key = "rate_limit_{$identifier}_{$ip}";
         
-        // Get current count
-        $current = $this->db->fetchOne(
-            "SELECT request_count, reset_time FROM rate_limits 
-             WHERE identifier = ? AND ip_address = ?",
-            [$identifier, $ip]
-        );
-        
-        $now = time();
-        
-        if (!$current || $current['reset_time'] < $now) {
-            // Reset or create new entry
-            $resetTime = $now + $timeWindow;
-            if ($current) {
-                $this->db->query(
-                    "UPDATE rate_limits SET request_count = 1, reset_time = ? 
-                     WHERE identifier = ? AND ip_address = ?",
-                    [$resetTime, $identifier, $ip]
-                );
-            } else {
-                $this->db->query(
-                    "INSERT INTO rate_limits (identifier, ip_address, request_count, reset_time) 
-                     VALUES (?, ?, 1, ?)",
-                    [$identifier, $ip, $resetTime]
-                );
+        try {
+            // Get current count
+            $current = $this->db->fetchOne(
+                "SELECT request_count, reset_time FROM rate_limits 
+                 WHERE identifier = ? AND ip_address = ?",
+                [$identifier, $ip]
+            );
+            
+            $now = time();
+            
+            if (!$current || $current['reset_time'] < $now) {
+                // Reset or create new entry
+                $resetTime = $now + $timeWindow;
+                if ($current) {
+                    $this->db->query(
+                        "UPDATE rate_limits SET request_count = 1, reset_time = ? 
+                         WHERE identifier = ? AND ip_address = ?",
+                        [$resetTime, $identifier, $ip]
+                    );
+                } else {
+                    $this->db->query(
+                        "INSERT INTO rate_limits (identifier, ip_address, request_count, reset_time) 
+                         VALUES (?, ?, 1, ?)",
+                        [$identifier, $ip, $resetTime]
+                    );
+                }
+                return true;
             }
+            
+            // Check if limit exceeded
+            if ($current['request_count'] >= $maxRequests) {
+                $this->logSecurityEvent('rate_limit_exceeded', [
+                    'identifier' => $identifier,
+                    'ip' => $ip,
+                    'count' => $current['request_count']
+                ]);
+                return false;
+            }
+            
+            // Increment count
+            $this->db->query(
+                "UPDATE rate_limits SET request_count = request_count + 1 
+                 WHERE identifier = ? AND ip_address = ?",
+                [$identifier, $ip]
+            );
+            
             return true;
+        } catch (PDOException $e) {
+            // If table doesn't exist, allow request but log error
+            if (strpos($e->getMessage(), 'does not exist') !== false || 
+                strpos($e->getMessage(), 'relation') !== false) {
+                error_log("Rate limits table not found. Please run database/schema_security_postgresql.sql: " . $e->getMessage());
+                // Allow request if table doesn't exist (graceful degradation)
+                return true;
+            }
+            // Re-throw other database errors
+            throw $e;
         }
-        
-        // Check if limit exceeded
-        if ($current['request_count'] >= $maxRequests) {
-            $this->logSecurityEvent('rate_limit_exceeded', [
-                'identifier' => $identifier,
-                'ip' => $ip,
-                'count' => $current['request_count']
-            ]);
-            return false;
-        }
-        
-        // Increment count
-        $this->db->query(
-            "UPDATE rate_limits SET request_count = request_count + 1 
-             WHERE identifier = ? AND ip_address = ?",
-            [$identifier, $ip]
-        );
-        
-        return true;
     }
     
     /**
@@ -185,6 +197,14 @@ class Security {
                     json_encode($data)
                 ]
             );
+        } catch (PDOException $e) {
+            // If table doesn't exist, just log to error log
+            if (strpos($e->getMessage(), 'does not exist') !== false || 
+                strpos($e->getMessage(), 'relation') !== false) {
+                error_log("Security logs table not found. Please run database/schema_security_postgresql.sql");
+            } else {
+                error_log("Security log error: " . $e->getMessage());
+            }
         } catch (Exception $e) {
             // Log to file if database fails
             error_log("Security log error: " . $e->getMessage());
