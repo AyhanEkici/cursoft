@@ -25,28 +25,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$security->checkRateLimit('signup', 3, 3600)) { // 3 attempts per hour
             $error = "Too many signup attempts. Please try again later.";
         } else {
-    $name = $_POST['name'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $confirmPassword = $_POST['confirm_password'] ?? '';
-    
-    if (empty($name) || empty($email) || empty($password)) {
-        $error = "All fields are required.";
-    } elseif ($password !== $confirmPassword) {
-        $error = "Passwords do not match.";
-    } elseif (strlen($password) < 8) {
-        $error = "Password must be at least 8 characters.";
-    } else {
-        try {
-            require_once __DIR__ . '/../includes/Auth.php';
-            $auth = new Auth();
-            $auth->register($email, $password, $name);
+            $name = $_POST['name'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
             
-            header('Location: login.php?signup=success');
-            exit;
-        } catch (Exception $e) {
-            $error = $e->getMessage();
-        }
+            if (empty($name) || empty($email) || empty($password)) {
+                $error = "All fields are required.";
+            } elseif ($password !== $confirmPassword) {
+                $error = "Passwords do not match.";
+            } elseif (strlen($password) < 8) {
+                $error = "Password must be at least 8 characters.";
+            } else {
+                try {
+                    require_once __DIR__ . '/../includes/Auth.php';
+                    $auth = new Auth();
+                    $auth->register($email, $password, $name);
+                    
+                    header('Location: login.php?signup=success');
+                    exit;
+                } catch (Exception $e) {
+                    $error = $e->getMessage();
+                }
+            }
         }
     }
 }
