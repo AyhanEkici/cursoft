@@ -1,0 +1,36 @@
+FROM php:8.2-apache
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy all project files
+COPY . .
+
+# Create public directory if it doesn't exist
+RUN mkdir -p public
+
+# Move web files to public directory
+RUN if [ -f "index.php" ]; then mv index.php public/; fi
+RUN if [ -f "index.html" ]; then mv index.html public/; fi
+
+# Copy asset directories
+RUN if [ -d "css" ]; then cp -r css public/; fi
+RUN if [ -d "js" ]; then cp -r js public/; fi
+RUN if [ -d "images" ]; then cp -r images public/; fi
+RUN if [ -d "assets" ]; then cp -r assets public/; fi
+
+# Set permissions
+RUN chmod -R 755 public
+
+# Configure Apache for Render's PORT
+RUN echo 'Listen ${PORT}' > /etc/apache2/ports.conf
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf
+
+# Enable Apache modules
+RUN a2enmod rewrite
+
+# Expose port
+EXPOSE $PORT
+
+# Start Apache
+CMD ["apache2-foreground"]

@@ -1,0 +1,9 @@
+# Tell Render to ignore Docker files
+# Render should use PHP runtime, not Docker
+
+Dockerfile
+Dockerfile.*
+dockerfile
+docker/
+*.dockerfile
+

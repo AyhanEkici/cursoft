@@ -1,0 +1,75 @@
+# PHP/Apache Dockerfile for Cursoft
+FROM --platform=linux/amd64 php:8.2-apache
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions (MySQL and PostgreSQL support)
+RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Enable Apache modules
+RUN a2enmod rewrite headers
+
+# Set working directory
+WORKDIR /var/www/html
+
+# CRITICAL: Remove ALL default files from base image
+RUN rm -rf /var/www/html/* /var/www/html/.* 2>/dev/null || true
+
+# Copy application files - use explicit COPY to ensure they're transferred
+COPY index.php /var/www/html/index.php
+COPY includes/ /var/www/html/includes/
+COPY pages/ /var/www/html/pages/
+COPY api/ /var/www/html/api/
+COPY public/ /var/www/html/public/
+COPY config/ /var/www/html/config/
+COPY database/ /var/www/html/database/
+
+# Copy health.php to root for easy access (also available at /public/health.php)
+RUN cp /var/www/html/public/health.php /var/www/html/health.php 2>/dev/null || true
+
+# Copy scripts if they exist
+COPY scripts/ /var/www/html/scripts/ 2>/dev/null || true
+
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html
+
+# Configure Apache for port 8080
+RUN echo 'Listen 8080' > /etc/apache2/ports.conf
+
+# Configure Apache VirtualHost - CRITICAL: Set DirectoryIndex to ONLY index.php
+RUN echo '<VirtualHost *:8080>\n\
+    ServerName localhost\n\
+    DocumentRoot /var/www/html\n\
+    DirectoryIndex index.php\n\
+    <Directory /var/www/html>\n\
+        Options -Indexes +FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# Disable default site and enable our site
+RUN a2dissite 000-default 2>/dev/null || true
+RUN a2ensite 000-default
+
+# Expose port
+EXPOSE 8080
+
+# Start Apache
+CMD ["apache2-foreground"]
