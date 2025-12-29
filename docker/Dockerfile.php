@@ -36,19 +36,20 @@ COPY api/ /var/www/html/api/
 COPY config/ /var/www/html/config/
 COPY database/ /var/www/html/database/
 
-# CRITICAL: Copy public/health.php BEFORE running render-build.sh
-# This ensures it's available for render-build.sh to copy
-COPY public/health.php /tmp/public/health.php
-RUN mkdir -p /tmp/public && cp /tmp/public/health.php /tmp/public/health.php 2>/dev/null || true
-
 # Copy render-build.sh and run it (creates public/ structure)
 COPY render-build.sh /tmp/render-build.sh
 RUN chmod +x /tmp/render-build.sh && cd /var/www/html && /tmp/render-build.sh
 
-# CRITICAL: Ensure health.php exists in public/ directory
-# Copy from build context if render-build.sh didn't copy it
+# CRITICAL: Copy health.php directly to public/ directory
+# This MUST happen after render-build.sh creates the public/ directory
 COPY public/health.php /var/www/html/public/health.php
-RUN chmod 644 /var/www/html/public/health.php
+
+# Verify health.php exists, create fallback if COPY failed
+RUN if [ ! -f "/var/www/html/public/health.php" ]; then \
+    echo '<?php header("Content-Type: application/json"); echo json_encode(["status" => "healthy", "service" => "cursoft", "timestamp" => date("Y-m-d H:i:s")]); ?>' > /var/www/html/public/health.php; \
+    fi && \
+    chmod 644 /var/www/html/public/health.php && \
+    ls -la /var/www/html/public/health.php
 
 # Copy scripts directory if it exists
 COPY scripts/ /var/www/html/scripts/
