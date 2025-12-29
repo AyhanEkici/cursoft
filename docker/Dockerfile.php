@@ -36,18 +36,12 @@ COPY api/ /var/www/html/api/
 COPY config/ /var/www/html/config/
 COPY database/ /var/www/html/database/
 
-# Create public directory and copy public assets (handle if they exist)
-RUN mkdir -p /var/www/html/public
-COPY public/css/ /var/www/html/public/css/
-COPY public/js/ /var/www/html/public/js/
-COPY public/health.php /var/www/html/public/health.php
-
-# Copy scripts directory if it exists
-COPY scripts/ /var/www/html/scripts/
-
-# Copy render-build.sh and run it (this will create public/ structure)
+# Copy render-build.sh first and run it (creates public/ structure)
 COPY render-build.sh /tmp/render-build.sh
 RUN chmod +x /tmp/render-build.sh && /tmp/render-build.sh
+
+# Copy scripts directory if it exists (optional)
+COPY scripts/ /var/www/html/scripts/
 
 # Copy health.php to root for easy access
 RUN cp /var/www/html/public/health.php /var/www/html/health.php 2>/dev/null || true
