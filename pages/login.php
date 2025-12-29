@@ -55,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['signup']) && $_GET['signup'] === 'success') {
     $success = "Account created successfully! Please login.";
 }
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
