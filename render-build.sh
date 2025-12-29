@@ -3,12 +3,13 @@ set -e
 
 echo "🚀 Starting Render build process for Cursoft..."
 
-# Create public directory for web files
+# Create public directory for web files (Render serves from public/)
 mkdir -p public
 mkdir -p public/api
 mkdir -p public/pages
 mkdir -p public/includes
-mkdir -p public/public
+mkdir -p public/config
+mkdir -p public/database
 
 # Copy all PHP files to public (Render serves from public/)
 echo "📦 Copying application files..."
@@ -37,9 +38,18 @@ if [ -d "includes" ]; then
   echo "✓ Copied includes"
 fi
 
-# Copy public assets (CSS, JS)
+# Copy public assets (CSS, JS) - these stay in public/ root
 if [ -d "public" ]; then
-  cp -r public/* public/public/ 2>/dev/null || true
+  # Copy CSS, JS, and health.php to public root
+  if [ -d "public/css" ]; then
+    cp -r public/css public/ 2>/dev/null || true
+  fi
+  if [ -d "public/js" ]; then
+    cp -r public/js public/ 2>/dev/null || true
+  fi
+  if [ -f "public/health.php" ]; then
+    cp public/health.php public/ 2>/dev/null || true
+  fi
   echo "✓ Copied public assets"
 fi
 
@@ -60,16 +70,40 @@ chmod -R 777 public/logs 2>/dev/null || true
 chmod -R 777 public/workspaces 2>/dev/null || true
 chmod -R 777 public/tmp 2>/dev/null || true
 
-# Create .htaccess for routing (if needed)
-cat > public/.htaccess << 'EOF'
-RewriteEngine On
-RewriteBase /
+# Create router.php for PHP built-in server (Render uses PHP -S)
+cat > public/router.php << 'ROUTER_EOF'
+<?php
+// Router for PHP built-in server
+// This allows clean URLs and proper routing
 
-# Redirect to index.php if file doesn't exist
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
-EOF
+$requestUri = $_SERVER['REQUEST_URI'];
+$path = parse_url($requestUri, PHP_URL_PATH);
+
+// Remove query string
+$path = strtok($path, '?');
+
+// If requesting root, serve index.php
+if ($path === '/' || $path === '') {
+    $_SERVER['SCRIPT_NAME'] = '/index.php';
+    require __DIR__ . '/index.php';
+    return true;
+}
+
+// If file exists, serve it directly
+$filePath = __DIR__ . $path;
+if (file_exists($filePath) && is_file($filePath)) {
+    return false; // Let PHP server serve the file
+}
+
+// Otherwise, route to index.php (for clean URLs)
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+require __DIR__ . '/index.php';
+return true;
+ROUTER_EOF
+
+chmod +x public/router.php
 
 echo "✅ Build completed successfully!"
+echo "📁 Public directory structure:"
+ls -la public/ | head -20
 
