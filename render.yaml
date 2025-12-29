@@ -1,9 +1,11 @@
 services:
   - type: web
     name: cursoft-app
-    env: php
-    buildCommand: "./render-build.sh"
-    startCommand: "php -S 0.0.0.0:${PORT} -t public router.php"
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile.php
+    dockerContext: .
+    buildCommand: ""
+    startCommand: ""
     envVars:
       - key: DATABASE_URL
         fromDatabase:
