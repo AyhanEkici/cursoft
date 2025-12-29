@@ -7,6 +7,7 @@
 
 class Database {
     private $host;
+    private $port;
     private $dbname;
     private $username;
     private $password;
@@ -145,4 +146,3 @@ class Database {
         return $pgSql;
     }
 }
-?>

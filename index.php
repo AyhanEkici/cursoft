@@ -11,5 +11,4 @@ if ($sessionManager->isLoggedIn()) {
     header('Location: ' . PathHelper::page('login.php'));
 }
 exit;
-?>
 

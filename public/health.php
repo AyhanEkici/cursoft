@@ -70,5 +70,4 @@ if ($health['status'] === 'healthy') {
 }
 
 echo json_encode($health, JSON_PRETTY_PRINT);
-?>
 

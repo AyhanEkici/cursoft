@@ -321,5 +321,4 @@ class Auth {
         return true;
     }
 }
-?>
 
