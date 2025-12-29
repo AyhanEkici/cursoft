@@ -36,18 +36,16 @@ COPY api/ /var/www/html/api/
 COPY config/ /var/www/html/config/
 COPY database/ /var/www/html/database/
 
-# Create public directory structure
+# Create public directory and copy public assets (handle if they exist)
 RUN mkdir -p /var/www/html/public
-
-# Copy public assets (only what exists in Git)
 COPY public/css/ /var/www/html/public/css/
 COPY public/js/ /var/www/html/public/js/
 COPY public/health.php /var/www/html/public/health.php
 
-# Copy scripts if directory exists (use shell to check)
-RUN if [ -d "scripts" ]; then cp -r scripts /var/www/html/; else mkdir -p /var/www/html/scripts; fi
+# Copy scripts directory if it exists
+COPY scripts/ /var/www/html/scripts/
 
-# Copy render-build.sh and run it
+# Copy render-build.sh and run it (this will create public/ structure)
 COPY render-build.sh /tmp/render-build.sh
 RUN chmod +x /tmp/render-build.sh && /tmp/render-build.sh
 
