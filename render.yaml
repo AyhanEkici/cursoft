@@ -1,7 +1,6 @@
 services:
   - type: web
     name: cursoft-app
-    runtime: php
     buildCommand: "./render-build.sh"
     startCommand: "php -S 0.0.0.0:${PORT} -t public router.php"
     envVars:
