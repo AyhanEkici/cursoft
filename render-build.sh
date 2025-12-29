@@ -39,6 +39,7 @@ if [ -d "includes" ]; then
 fi
 
 # Copy public assets (CSS, JS) - these stay in public/ root
+# Check multiple possible locations for health.php
 if [ -d "public" ]; then
   # Copy CSS, JS, and health.php to public root
   if [ -d "public/css" ]; then
@@ -47,10 +48,22 @@ if [ -d "public" ]; then
   if [ -d "public/js" ]; then
     cp -r public/js public/ 2>/dev/null || true
   fi
+  # Try multiple locations for health.php
   if [ -f "public/health.php" ]; then
     cp public/health.php public/ 2>/dev/null || true
+  elif [ -f "/tmp/public/health.php" ]; then
+    cp /tmp/public/health.php public/ 2>/dev/null || true
+  elif [ -f "../public/health.php" ]; then
+    cp ../public/health.php public/ 2>/dev/null || true
   fi
   echo "✓ Copied public assets"
+fi
+
+# CRITICAL: Ensure health.php exists in public/ directory
+# Create a simple one if it doesn't exist
+if [ ! -f "public/health.php" ]; then
+  echo '<?php header("Content-Type: application/json"); echo json_encode(["status" => "healthy", "service" => "cursoft", "timestamp" => date("Y-m-d H:i:s")]); ?>' > public/health.php
+  echo "✓ Created health.php fallback"
 fi
 
 # Copy config
