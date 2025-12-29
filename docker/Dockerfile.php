@@ -40,10 +40,15 @@ COPY database/ /var/www/html/database/
 COPY render-build.sh /tmp/render-build.sh
 RUN chmod +x /tmp/render-build.sh && /tmp/render-build.sh
 
-# Copy scripts directory if it exists (optional)
+# Ensure health.php exists in public/ directory (for health check)
+RUN if [ ! -f "/var/www/html/public/health.php" ]; then \
+    echo '<?php header("Content-Type: application/json"); echo json_encode(["status" => "healthy", "service" => "cursoft"]); ?>' > /var/www/html/public/health.php; \
+    fi
+
+# Copy scripts directory if it exists
 COPY scripts/ /var/www/html/scripts/
 
-# Copy health.php to root for easy access
+# Copy health.php to root for easy access (backup)
 RUN cp /var/www/html/public/health.php /var/www/html/health.php 2>/dev/null || true
 
 # Fix permissions
@@ -56,6 +61,7 @@ set -e\n\
 PORT=${PORT:-10000}\n\
 sed -i "s/Listen 80/Listen $PORT/g" /etc/apache2/ports.conf\n\
 sed -i "s/:80/:$PORT/g" /etc/apache2/sites-available/000-default.conf\n\
+sed -i "s/:10000/:$PORT/g" /etc/apache2/sites-available/000-default.conf\n\
 exec apache2-foreground' > /start.sh && \
 chmod +x /start.sh
 
