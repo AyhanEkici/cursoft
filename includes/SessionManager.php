@@ -47,5 +47,4 @@ class SessionManager {
         return $this->auth->isLoggedIn();
     }
 }
-?>
 
